@@ -7,6 +7,7 @@ INCLUDE_DIR = include
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
+INPUT_DIR = input
 OUTPUT_DIR = output
 
 # Source files
@@ -15,7 +16,7 @@ CU_FILES = $(wildcard $(SRC_DIR)/*.cu)
 
 # Object files (separate for CPP and CU files)
 OBJ_CPP_FILES = $(addprefix $(OBJ_DIR)/, $(notdir $(CPP_FILES:.cpp=.o)))
-OBJ_CU_FILES = $(addprefix $(OBJ_DIR)/, $(notdir $(CU_FILES:.cu=.o)))
+OBJ_CU_FILES = $(addprefix $(OBJ_DIR)/, $(notdir $(CU_FILES:.cu:.o)))
 
 # Targets
 TEST_SOLUTION_TARGET = $(BIN_DIR)/test_solution
@@ -31,8 +32,15 @@ NVCCFLAGS = -I$(INCLUDE_DIR) -O3
 # CUDA libs
 CUDA_LIBS = -lcudart -L/usr/local/cuda/lib64
 
-# Build all executables
-all: $(TEST_SOLUTION_TARGET) $(GENERATE_INPUT_TARGET) $(CPU_TARGET) $(GPU_TARGET) $(OPTIMISED_GPU_TARGET)
+# Ensure directories exist
+DIRS := $(OBJ_DIR) $(BIN_DIR) $(OUTPUT_DIR) $(INPUT_DIR)
+
+.PHONY: dirs
+dirs:
+	mkdir -p $(DIRS)
+
+# Build all executables, ensuring directories are created
+all: dirs $(TEST_SOLUTION_TARGET) $(GENERATE_INPUT_TARGET) $(CPU_TARGET) $(GPU_TARGET) $(OPTIMISED_GPU_TARGET)
 
 # Rules for building object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
