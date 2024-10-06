@@ -1,10 +1,3 @@
-// Creates tests for Hamming One problem
-//
-// In order to maximise amount of comparisions required to 
-// calculate result by brute force solutions, sequences 
-// often differ on the very last positions
-//
-
 #include "generate_input.h"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\

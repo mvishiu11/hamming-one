@@ -1,12 +1,3 @@
-// Hamming One
-// Architecture: GPU
-// Complexity: L * MlogM
-//
-// Complexity can be easily lowered to O(L * M) 
-// by using a dictonary that supports insert and 
-// chech_if_consists both in o(1) complexity
-//
-
 #include "hamming_one_optimised_gpu.h"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\

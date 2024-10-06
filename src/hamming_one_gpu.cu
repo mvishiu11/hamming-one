@@ -1,8 +1,3 @@
-// Hamming One
-// Architecture: GPU
-// Complexity: L * M^2
-//
-
 #include "hamming_one_gpu.h"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\

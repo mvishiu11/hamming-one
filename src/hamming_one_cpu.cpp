@@ -1,12 +1,3 @@
-// Hamming One
-// Architecture: CPU
-// Complexity: L * MlogM
-//
-// Complexity can be easily lowered to O(L * M) using 
-// std::unordered_map or any other dictionary that supports 
-// insert and check_if_consists both in o(1) complexity
-// 
-
 #include "hamming_one_cpu.hpp"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
