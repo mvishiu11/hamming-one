@@ -2,6 +2,8 @@ echo "Making solutions"
 make > /dev/null
 
 echo "Generating input"
+mkdir -p input
+mkdir -p output
 ./bin/generate_input input/input.txt 1000 100000
 
 echo "Running CPU"
