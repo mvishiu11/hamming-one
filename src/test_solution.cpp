@@ -1,11 +1,4 @@
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-using namespace std;
-
-#define CORRECT_SOLUTION "\033[0;32mCORRECT SOLUTION!\033[1;37m"
-#define BAD_SOLUTION "\033[0;31mBAD SOLUTION!\033[1;37m"
+#include "test_solution.hpp"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),\

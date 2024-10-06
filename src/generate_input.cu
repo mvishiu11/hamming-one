@@ -5,17 +5,8 @@
 // often differ on the very last positions
 //
 
-#include <iostream>
-#include <fstream>
-#include <curand.h>
-#include <curand_kernel.h>
-using namespace std;
+#include "generate_input.h"
 
-#define DEFAULT_L_VALUE 1000
-#define DEFAULT_M_VALUE (int)1e5
-#define SIZE_OF_FIFO_TXT (long long int)1e15
-#define MIN_L_VALUE 3
-#define MIN_M_VALUE 20
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),\
                      exit(EXIT_FAILURE))

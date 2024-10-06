@@ -3,13 +3,8 @@
 // Complexity: L * M^2
 //
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-using namespace std;
+#include "hamming_one_gpu.h"
 
-#define SIZE_OF_FIFO_TXT (long long int)1e15
-#define BITS_IN_INT 31
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),\
                      exit(EXIT_FAILURE))

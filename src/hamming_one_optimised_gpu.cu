@@ -7,33 +7,11 @@
 // chech_if_consists both in o(1) complexity
 //
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <thrust/device_vector.h>
-#include <thrust/sort.h>
-using namespace std;
-
-#define SIZE_OF_FIFO_TXT (long long int)1e15
-#define MOD1 100000004917
-#define MOD2 99999981101
-#define P1 29
-#define P2 41
+#include "hamming_one_optimised_gpu.h"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),\
                      exit(EXIT_FAILURE))
-
-struct Triplet {
-    long long int hash1, hash2;
-    int index;
-
-    __host__ __device__ bool operator<(const Triplet& triplet) const {
-        if (hash1 != triplet.hash1) return hash1 < triplet.hash1;
-        if (hash2 != triplet.hash2) return hash2 < triplet.hash2;
-        return index < triplet.index;
-    }
-};
 
 void usage(char *name){
     fprintf(stderr,"USAGE: %s <input_file_path>\n",name);

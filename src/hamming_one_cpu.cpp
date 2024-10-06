@@ -7,17 +7,7 @@
 // insert and check_if_consists both in o(1) complexity
 // 
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <vector>
-#include <map>
-using namespace std;
-
-#define MOD1 100000004917
-#define MOD2 99999981101
-#define P1 29
-#define P2 41
+#include "hamming_one_cpu.hpp"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),\
