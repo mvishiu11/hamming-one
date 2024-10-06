@@ -64,12 +64,19 @@ OPT_GPU_START_TIME=$(date +%s%N | cut -b1-13)
 ./bin/hamming_one_optimised_gpu input/input.txt > output/output3.txt
 OPT_GPU_END_TIME=$(date +%s%N | cut -b1-13)
 
+# Run HashTable GPU
+echo "Running GPU with hashtable"
+HASH_GPU_START_TIME=$(date +%s%N | cut -b1-13)
+./bin/hamming_one_hashtable_gpu input/input.txt > output/output5.txt
+HASH_GPU_END_TIME=$(date +%s%N | cut -b1-13)
+
 # Compare results
-echo "GPU: " `./bin/test_solution output/output1.txt output/output2.txt`
-echo "Optimised GPU: " `./bin/test_solution output/output1.txt output/output3.txt`
 if [ "$RUN_CPU" = true ]; then
     echo "CPU with hashtable: " `./bin/test_solution output/output1.txt output/output4.txt`
 fi
+echo "GPU: " `./bin/test_solution output/output1.txt output/output2.txt`
+echo "Optimised GPU: " `./bin/test_solution output/output1.txt output/output3.txt`
+echo "GPU with hashtable: " `./bin/test_solution output/output1.txt output/output5.txt`
 
 # Timing output
 if [ "$RUN_CPU" = true ]; then
@@ -78,3 +85,4 @@ if [ "$RUN_CPU" = true ]; then
 fi
 echo "GPU calculations took $(($GPU_END_TIME - $GPU_START_TIME)) milliseconds to complete"
 echo "Optimised GPU calculations took $(($OPT_GPU_END_TIME - $OPT_GPU_START_TIME)) milliseconds to complete"
+echo "GPU with hashtable calculations took $(($HASH_GPU_END_TIME - $HASH_GPU_START_TIME)) milliseconds to complete"

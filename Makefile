@@ -25,6 +25,7 @@ CPU_TARGET = $(BIN_DIR)/hamming_one_cpu
 GPU_TARGET = $(BIN_DIR)/hamming_one_gpu
 OPTIMISED_GPU_TARGET = $(BIN_DIR)/hamming_one_optimised_gpu
 HASHTABLE_CPU_TARGET = $(BIN_DIR)/hamming_one_hashtable_cpu
+HASHTABLE_GPU_TARGET = $(BIN_DIR)/hamming_one_hashtable_gpu
 
 # Compiler flags
 CXXFLAGS = -I$(INCLUDE_DIR) -O3
@@ -41,7 +42,7 @@ dirs:
 	mkdir -p $(DIRS)
 
 # Build all executables, ensuring directories are created
-all: dirs $(TEST_SOLUTION_TARGET) $(GENERATE_INPUT_TARGET) $(CPU_TARGET) $(HASHTABLE_CPU_TARGET) $(GPU_TARGET) $(OPTIMISED_GPU_TARGET)
+all: dirs $(TEST_SOLUTION_TARGET) $(GENERATE_INPUT_TARGET) $(CPU_TARGET) $(HASHTABLE_CPU_TARGET) $(GPU_TARGET) $(OPTIMISED_GPU_TARGET) $(HASHTABLE_GPU_TARGET)
 
 # Rules for building object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
@@ -73,6 +74,10 @@ $(GPU_TARGET): $(OBJ_DIR)/hamming_one_gpu.o
 # Optimised GPU executable
 $(OPTIMISED_GPU_TARGET): $(OBJ_DIR)/hamming_one_optimised_gpu.o
 	$(NVCC) $(NVCCFLAGS) $(OBJ_DIR)/hamming_one_optimised_gpu.o -o $(OPTIMISED_GPU_TARGET) $(CUDA_LIBS)
+
+# Hashtable GPU executable
+$(HASHTABLE_GPU_TARGET): $(OBJ_DIR)/hamming_one_hashtable_gpu.o
+	$(NVCC) $(NVCCFLAGS) $(OBJ_DIR)/hamming_one_hashtable_gpu.o -o $(HASHTABLE_GPU_TARGET) $(CUDA_LIBS)
 
 # Clean up
 clean:
