@@ -23,12 +23,12 @@ do
 done
 
 echo "Making solutions"
-make > /dev/null
+make all > /dev/null
 
 # Generate input if --no-gen is not specified
 if [ "$GEN_INPUT" = true ]; then
     echo "Generating input"
-    ./bin/generate_input input/input.txt 1000 100000
+    ./bin/generate_input input/input.txt 1000 200000
 else
     echo "Skipping input generation"
 fi
@@ -39,6 +39,10 @@ if [ "$RUN_CPU" = true ]; then
     CPU_START_TIME=$(date +%s%N | cut -b1-13)
     ./bin/hamming_one_cpu input/input.txt > output/output1.txt
     CPU_END_TIME=$(date +%s%N | cut -b1-13)
+    echo "Running CPU with hashtable"
+    CPU_HASHTABLE_START_TIME=$(date +%s%N | cut -b1-13)
+    ./bin/hamming_one_hashtable_cpu input/input.txt > output/output4.txt
+    CPU_HASHTABLE_END_TIME=$(date +%s%N | cut -b1-13)
 else
     echo "Skipping CPU run, using GPU output as baseline"
 fi
@@ -63,10 +67,14 @@ OPT_GPU_END_TIME=$(date +%s%N | cut -b1-13)
 # Compare results
 echo "GPU: " `./bin/test_solution output/output1.txt output/output2.txt`
 echo "Optimised GPU: " `./bin/test_solution output/output1.txt output/output3.txt`
+if [ "$RUN_CPU" = true ]; then
+    echo "CPU with hashtable: " `./bin/test_solution output/output1.txt output/output4.txt`
+fi
 
 # Timing output
 if [ "$RUN_CPU" = true ]; then
     echo "CPU calculations took $(($CPU_END_TIME - $CPU_START_TIME)) milliseconds to complete"
+    echo "CPU with hashtable calculations took $(($CPU_HASHTABLE_END_TIME - $CPU_HASHTABLE_START_TIME)) milliseconds to complete"
 fi
 echo "GPU calculations took $(($GPU_END_TIME - $GPU_START_TIME)) milliseconds to complete"
 echo "Optimised GPU calculations took $(($OPT_GPU_END_TIME - $OPT_GPU_START_TIME)) milliseconds to complete"

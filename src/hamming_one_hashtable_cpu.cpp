@@ -1,4 +1,4 @@
-#include "hamming_one_cpu.hpp"
+#include "hamming_one_hashtable_cpu.hpp"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),\
@@ -40,33 +40,30 @@ void calculate_hashes(long long int *d_hashes1, long long int *d_hashes2, bool *
 }
 
 void find_hamming_one(long long int *h_hashes1, long long int *h_hashes2, int L, int M) {
-    map<pair<long long int, long long int>, vector<int>> hash_map;
+    unordered_map<long long int, vector<int>> hash_map1, hash_map2;
 
-    long long int p1, p2;
-    for (int i = M - 1; i >= 0; i--) {
-        p1 = P1;
-        p2 = P2;
+    for (int i = 0; i < M; i++) {
+        hash_map1[h_hashes1[i]].push_back(i);
+        hash_map2[h_hashes2[i]].push_back(i);
+    }
+
+    for (int i = 0; i < M; i++) {
         for (int j = 0; j < L; j++) {
-            auto pointer = hash_map.find(make_pair((h_hashes1[i] + p1) % MOD1, (h_hashes2[i] + p2) % MOD2));
-            if (pointer != hash_map.end()) {
-                int vector_size = (int)pointer->second.size();
-                for (int o = 0; o < vector_size; o++) {
-                    printf("%d %d\n", i, pointer->second[o]);
+            // Alter the hash by flipping one bit and check for matching pairs
+            long long int altered_hash1 = h_hashes1[i] ^ (1LL << j);
+            long long int altered_hash2 = h_hashes2[i] ^ (1LL << j);
+
+            if (hash_map1.find(altered_hash1) != hash_map1.end() && 
+                hash_map2.find(altered_hash2) != hash_map2.end()) {
+
+                // Check if sequences have exactly one difference
+                for (int matched_index : hash_map1[altered_hash1]) {
+                    if (matched_index != i) {
+                        printf("%d %d\n", i, matched_index);
+                    }
                 }
             }
-
-            pointer = hash_map.find(make_pair((h_hashes1[i] - p1 + MOD1) % MOD1, (h_hashes2[i] - p2 + MOD2) % MOD2));
-            if (pointer != hash_map.end()) {     
-                int vector_size = (int)pointer->second.size();
-                for (int o = 0; o < vector_size; o++) {
-                    printf("%d %d\n", i, pointer->second[o]);
-                }
-            }
-
-            p1 = (p1 * P1) % MOD1;
-            p2 = (p2 * P2) % MOD2;
         }
-        hash_map[make_pair(h_hashes1[i], h_hashes2[i])].push_back(i);
     }
 }
 
@@ -77,15 +74,18 @@ int main(int argc, char ** argv) {
     long long int *h_hashes1,* h_hashes2;
     read_input(argv[1], L, M, h_input);
 
-
     h_hashes1 = new long long int[M];
     h_hashes2 = new long long int[M];
-    if (h_hashes1 == NULL || h_hashes2 == NULL) ERR("dynamic allocation failed");
+    if (h_hashes1 == NULL || h_hashes2 == NULL) ERR("operator new");
     memset(h_hashes1, 0, sizeof(long long int) * M);
     memset(h_hashes2, 0, sizeof(long long int) * M);
 
     calculate_hashes(h_hashes1, h_hashes2, h_input, L, M);
     find_hamming_one(h_hashes1, h_hashes2, L, M);
+
+    delete[] h_hashes1;
+    delete[] h_hashes2;
+    delete[] h_input;
 
     return EXIT_SUCCESS;
 }

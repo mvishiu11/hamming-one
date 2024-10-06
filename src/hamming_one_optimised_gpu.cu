@@ -9,6 +9,12 @@ void usage(char *name){
     exit(EXIT_FAILURE);
 }
 
+__host__ __device__ bool Triplet::operator<(const Triplet& triplet) const {
+    if (hash1 < triplet.hash1) return true;
+    if (hash1 == triplet.hash1 && hash2 < triplet.hash2) return true;
+    return false;
+}
+
 int _ceil(double variable) {
     int new_variable = (int)variable;
     if ((double)new_variable == variable) return new_variable;
