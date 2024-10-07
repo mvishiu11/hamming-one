@@ -24,29 +24,48 @@ int _ceil(double variable) {
 __global__ void hash_table_init(Pair* hash_table, int table_size) {
     int index = blockIdx.x * 1024 + threadIdx.x;
     if (index >= table_size) return;
-    hash_table[index].index = -1;
+    hash_table[index].hash = EMPTY_KEY;
 }
 
 __device__ void hash_table_insert(Pair* hash_table, long long int hash1, long long int hash2, int index, int table_size) {
     unsigned long long pos = hash1 % table_size;
-    int quad = 1;
-    while (hash_table[pos].index != -1) {
+    int quad;
+    while (true) {
+        int old = atomicCAS((unsigned long long int*)&hash_table[pos].hash, EMPTY_KEY, (unsigned long long int)hash2);
+        if (old == EMPTY_KEY || old == hash2) {
+#ifdef DEBUG_HASH_TABLE
+            printf("Inserting element: %d | %lld | %lld at %lld\n", index, hash1, hash2, pos);
+#endif
+            hash_table[pos].index = index;
+            break;
+        }
+#ifdef DEBUG_HASH_TABLE
+        printf("Collision at %lld\n", pos);
+#endif
         pos = (pos + quad * quad) % table_size;
         quad++;
     }
-    hash_table[pos].index = index;
-    hash_table[pos].hash = hash2;
 }
 
 __device__ int hash_table_lookup(Pair* hash_table, long long int hash1, long long int hash2, int table_size) {
     unsigned long long pos = hash1 % table_size;
     int quad = 1;
-    while (hash_table[pos].index != -1) {
-        if (hash_table[pos].hash == hash2) return hash_table[pos].index;
+    while (true) {
+        if (hash_table[pos].hash == hash2) {
+        #ifdef DEBUG_HASH_TABLE
+            printf("Looked for %lld | %lld -> found element: %d | %lld at %lld\n", hash1, hash2, hash_table[pos].index, hash_table[pos].hash, pos); 
+        #endif
+            return hash_table[pos].index;
+        }
+        if (hash_table[pos].hash == EMPTY_KEY) {
+        #ifdef DEBUG_HASH_TABLE
+            printf("Looked for %lld | %lld -> element not found\n", hash1, hash2);
+        #endif
+            return -1;
+        }
         pos = (pos + quad * quad) % table_size;
         quad++;
     }
-    return -1;
 }
 
 void read_input(char* file_path, int& L, int& M, bool*& h_input) {
@@ -94,6 +113,15 @@ __global__ void find_hamming_one(Triplet* d_hashes_map, Pair* d_hash_table, bool
     int index = blockIdx.x * 1024 + threadIdx.x;
     if (index >= M) return;
     
+#ifdef DEBUG_SHOW_HASH_TABLE
+    if (index == 0) {
+        printf("Hashes:\n");
+        for (int i = 0; i < 4 * M; i++) {
+            printf("%d: %d | %lld\n", i, d_hash_table[i].index, d_hash_table[i].hash);
+        }
+    }
+#endif
+
     int reversed_bit; // turns (1 to -1) and (0 to 1)
     long long int p1 = P1;
     long long int p2 = P2;
@@ -109,7 +137,9 @@ __global__ void find_hamming_one(Triplet* d_hashes_map, Pair* d_hash_table, bool
 
         temp_hash1 = (hash1 + reversed_bit * p1 + MOD1) % MOD1;
         temp_hash2 = (hash2 + reversed_bit * p2 + MOD2) % MOD2;
-
+#ifdef DEBUG_HASH_TABLE
+        printf("Looking for %lld | %lld\n", temp_hash1, temp_hash2);
+#endif
         int o = hash_table_lookup(d_hash_table, temp_hash1, temp_hash2, table_size);
         while(o != -1 && o < M && d_hashes_map[o].hash1 == temp_hash1 && d_hashes_map[o].hash2 == temp_hash2) {
             if (d_hashes_map[index].index < d_hashes_map[o].index) 
@@ -146,6 +176,7 @@ int main(int argc, char ** argv) {
     
     thrust::sort(thrust::device, d_hashes_map, d_hashes_map + M);
     
+    cudaDeviceSynchronize();
     cudaDeviceSetLimit(cudaLimitPrintfFifoSize, SIZE_OF_FIFO_TXT);
     find_hamming_one<<<blocks, threads>>>(d_hashes_map, d_hash_table, d_input, L, M, table_size);
     cudaDeviceSynchronize();

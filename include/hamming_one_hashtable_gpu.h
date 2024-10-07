@@ -13,16 +13,21 @@ using namespace std;
 /**
  * @file hamming_one_optimised_gpu.h
  * @brief This file contains the optimised CUDA kernel to find pairs of sequences with a Hamming distance of one,
- *        using rolling polynomial hashing to reduce the number of comparisons.
+ *        using rolling polynomial hashing to reduce the number of comparisons and hash table to reduce time complexity 
+ *        of search.
  * Architecture: GPU
- * Complexity: O(L * MlogM)
+ * Complexity: O(L * M)
  */
+
+//#define DEBUG_HASH_TABLE
+#define DEBUG_SHOW_HASH_TABLE
 
 #define SIZE_OF_FIFO_TXT (long long int)1e15
 #define MOD1 100000004917
 #define MOD2 99999981101
 #define P1 29
 #define P2 41
+#define EMPTY_KEY 0xffffffffffffffff
 
 /**
  * @brief Structure representing the hashes and index of each sequence.
@@ -53,7 +58,8 @@ struct Triplet {
  * This structure stores an index and a hash value and is meant for storage in hash maps.
  */
 struct Pair {
-    int index, hash;
+    int index;
+    long long int hash;
 };
 
 /**
