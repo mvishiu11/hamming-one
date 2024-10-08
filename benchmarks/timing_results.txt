@@ -1,0 +1,3 @@
+Sample Size,Sequence length,CPU Time (ms),CPU Hashtable Time (ms),GPU Time (ms),Optimized GPU Time (ms),GPU Hashtable Time (ms)
+5000,10000,5817,5362,3961,4090,0
+10000,10000,13652,12568,7224,7702,0

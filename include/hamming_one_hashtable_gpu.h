@@ -25,6 +25,7 @@ using namespace std;
 #define P1 29
 #define P2 41
 #define EMPTY_KEY 0xffffffffffffffff
+#define EMPTY_INDEX -1
 
 /**
  * @brief Structure representing the hashes and index of each sequence.
@@ -99,7 +100,7 @@ __device__ int binsearch(Triplet* d_hashes_map, int M, long long int hash1, long
  * @param L The length of each sequence.
  * @param M The number of sequences.
  */
-__global__ void calculate_hashes(Triplet* d_hashes_map, bool *d_input, int L, int M);
+__global__ void calculate_hashes(Triplet* d_hashes_map, Triplet* d_hash_table, bool *d_input, int L, int M);
 
 /**
  * @brief CUDA kernel to find sequences with a Hamming distance of one.
@@ -113,6 +114,6 @@ __global__ void calculate_hashes(Triplet* d_hashes_map, bool *d_input, int L, in
  * @param L The length of each sequence.
  * @param M The number of sequences.
  */
-__global__ void find_hamming_one(Triplet* d_hashes_map, bool* d_input, int L, int M);
+__global__ void find_hamming_one(Triplet* d_hashes_map, Triplet* d_hash_table, bool* d_input, int L, int M);
 
 #endif // HAMMING_ONE_HASHTABLE_GPU_H
