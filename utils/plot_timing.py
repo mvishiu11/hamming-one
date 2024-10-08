@@ -21,6 +21,7 @@ x_ticks = seq_lengths if args.seq_length else sample_sizes
 x_label = "Sequence Length" if args.seq_length else "Number of Samples"
 title = "Performance of Different Implementations by Sequence Length" if args.seq_length \
    else "Performance of Different Implementations by Sample Size"
+   
 
 plt.figure(figsize=(10, 6))
 plt.plot(x_ticks, cpu_times, label="CPU", marker='o')
