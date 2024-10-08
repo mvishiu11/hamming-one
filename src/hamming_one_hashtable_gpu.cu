@@ -21,19 +21,26 @@ int _ceil(double variable) {
     else return new_variable + 1;
 }
 
-__global__ void hash_table_init(Pair* hash_table, int table_size) {
-    int index = blockIdx.x * 1024 + threadIdx.x;
-    if (index >= table_size) return;
-    hash_table[index].hash = EMPTY_KEY;
+__device__ long long int pair_hash(long long int hash1, long long int hash2, int table_size) {
+    return hash1 ^ (hash2 << 1) % table_size;
 }
 
-__device__ void hash_table_insert(Pair* hash_table, long long int hash1, long long int hash2, int index, int table_size) {
-    unsigned long long pos = hash1 % table_size;
+__global__ void hash_table_init(Triplet* hash_table, int table_size) {
+    int index = blockIdx.x * 1024 + threadIdx.x;
+    if (index >= table_size) return;
+    hash_table[index].hash1 = EMPTY_KEY;
+    hash_table[index].hash2 = EMPTY_KEY;
+    hash_table[index].index = EMPTY_INDEX;
+}
+
+__device__ void hash_table_insert(Triplet* hash_table, long long int hash1, long long int hash2, int index, int table_size) {
+    unsigned long long pos = pair_hash(hash1, hash2, table_size);
     int quad = 1;
     while (true) {
-        int old = atomicCAS((unsigned long long int*)&hash_table[pos].hash, EMPTY_KEY, (unsigned long long int)hash2);
-        if (old == EMPTY_KEY || old == hash2) {
-            hash_table[pos].index = index;
+        int old_hash1 = atomicCAS((unsigned long long int*)&hash_table[pos].hash1, EMPTY_KEY, (unsigned long long int)hash1);
+        int old_hash2 = atomicCAS((unsigned long long int*)&hash_table[pos].hash2, EMPTY_KEY, (unsigned long long int)hash2);
+        int old_index = atomicCAS(&hash_table[pos].index, EMPTY_INDEX, index);
+        if ((old_hash1 == EMPTY_KEY && old_hash2 == EMPTY_KEY && old_index == EMPTY_INDEX) || (old_hash1 == hash1 && old_hash2 == hash2 && old_index == index)) {
             break;
         }
         pos = (pos + quad * quad) % table_size;
@@ -41,15 +48,15 @@ __device__ void hash_table_insert(Pair* hash_table, long long int hash1, long lo
     }
 }
 
-__device__ int hash_table_lookup(Pair* hash_table, long long int hash1, long long int hash2, int table_size) {
-    unsigned long long pos = hash1 % table_size;
+__device__ void hash_table_lookup(Triplet* hash_table, long long int hash1, long long int hash2, int table_size, int index) {
+    unsigned long long pos = pair_hash(hash1, hash2, table_size);
     int quad = 1;
     while (true) {
-        if (hash_table[pos].hash == hash2) {
-            return hash_table[pos].index;
+        if (hash_table[pos].hash1 == hash1 && hash_table[pos].hash2 == hash2) {
+            printf("%d %d\n", index, hash_table[pos].index);
         }
-        if (hash_table[pos].hash == EMPTY_KEY) {
-            return -1;
+        if (hash_table[pos].hash1 == EMPTY_KEY) {
+            return;
         }
         pos = (pos + quad * quad) % table_size;
         quad++;
@@ -72,7 +79,7 @@ void read_input(char* file_path, int& L, int& M, bool*& h_input) {
     }
 }
 
-__global__ void calculate_hashes(Triplet* d_hashes_map, Pair* d_hash_table, bool *d_input, int L, int M, int table_size) {
+__global__ void calculate_hashes(Triplet* d_hashes_map, Triplet* d_hash_table, bool *d_input, int L, int M, int table_size) {
 
     int index = blockIdx.x * 1024 + threadIdx.x;
     if (index >= M) return;
@@ -96,13 +103,19 @@ __global__ void calculate_hashes(Triplet* d_hashes_map, Pair* d_hash_table, bool
     d_hashes_map[index] = triplet;
 }
 
-__global__ void find_hamming_one(Triplet* d_hashes_map, Pair* d_hash_table, bool* d_input, int L, int M, int table_size) {
-
+__global__ void find_hamming_one(Triplet* d_hashes_map, Triplet* d_hash_table, bool* d_input, int L, int M, int table_size) {
     int index = blockIdx.x * 1024 + threadIdx.x;
     if (index >= M) return;
     int reversed_bit; // turns (1 to -1) and (0 to 1)
     long long int p1 = P1;
     long long int p2 = P2;
+
+    if (index == 100) {
+        printf("index hash1 hash2\n");
+        for (int i = 0; i < table_size; i++) {
+            printf("%d %lld %lld\n", d_hash_table[i].index, d_hash_table[i].hash1, d_hash_table[i].hash2);
+        }
+    }
 
     long long int hash1 = d_hashes_map[index].hash1;
     long long int hash2 = d_hashes_map[index].hash2;
@@ -115,19 +128,7 @@ __global__ void find_hamming_one(Triplet* d_hashes_map, Pair* d_hash_table, bool
 
         temp_hash1 = (hash1 + reversed_bit * p1 + MOD1) % MOD1;
         temp_hash2 = (hash2 + reversed_bit * p2 + MOD2) % MOD2;
-        int original_o = hash_table_lookup(d_hash_table, temp_hash1, temp_hash2, table_size);
-        int o = original_o;
-        while(o != -1 && o < M && d_hashes_map[o].hash1 == temp_hash1 && d_hashes_map[o].hash2 == temp_hash2) {
-            if (d_hashes_map[index].index < d_hashes_map[o].index) 
-                printf("%d %d\n", d_hashes_map[index].index, d_hashes_map[o].index);
-            o++;
-        }
-        o = original_o - 1;
-        while(o != -1 && d_hashes_map[o].hash1 == temp_hash1 && d_hashes_map[o].hash2 == temp_hash2) {
-            if (d_hashes_map[index].index < d_hashes_map[o].index) 
-                printf("%d %d\n", d_hashes_map[index].index, d_hashes_map[o].index);
-            o--;
-        }
+        hash_table_lookup(d_hash_table, temp_hash1, temp_hash2, table_size, d_hashes_map[index].index);
 
         p1 = (p1 * P1) % MOD1;
         p2 = (p2 * P2) % MOD2;
@@ -148,18 +149,33 @@ int main(int argc, char ** argv) {
     blocks = _ceil((double)M / threads);
 
     Triplet* d_hashes_map;
-    Pair* d_hash_table;
+    Triplet* d_hash_table;
     int table_size = 4 * M;
     cudaMalloc(&d_hashes_map, sizeof(Triplet) * M);
-    cudaMalloc(&d_hash_table, sizeof(Pair) * table_size);
+    cudaMalloc(&d_hash_table, sizeof(Triplet) * table_size);
 
     hash_table_init<<<blocks, threads>>>(d_hash_table, table_size);
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        fprintf(stderr, "Error launching hash_table_init: %s\n", cudaGetErrorString(error));
+        return EXIT_FAILURE;
+    }
+
     calculate_hashes<<<blocks, threads>>>(d_hashes_map, d_hash_table, d_input, L, M, table_size);
-    
-    thrust::sort(thrust::device, d_hashes_map, d_hashes_map + M);
+    error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        fprintf(stderr, "Error launching calculate_hashes: %s\n", cudaGetErrorString(error));
+        return EXIT_FAILURE;
+    }
     
     cudaDeviceSetLimit(cudaLimitPrintfFifoSize, SIZE_OF_FIFO_TXT);
+    cudaDeviceSynchronize();
     find_hamming_one<<<blocks, threads>>>(d_hashes_map, d_hash_table, d_input, L, M, table_size);
+    error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        fprintf(stderr, "Error launching find_hamming_one: %s\n", cudaGetErrorString(error));
+        return EXIT_FAILURE;
+    }
     cudaDeviceSynchronize();
 
     cudaFree(d_input);
