@@ -19,9 +19,6 @@ using namespace std;
  * Complexity: O(L * M)
  */
 
-//#define DEBUG_HASH_TABLE
-#define DEBUG_SHOW_HASH_TABLE
-
 #define SIZE_OF_FIFO_TXT (long long int)1e15
 #define MOD1 100000004917
 #define MOD2 99999981101
